@@ -5,6 +5,7 @@
 
 import { FileRow } from './file-row.js';
 import { Formatter } from './formatter.js';
+import { Prefs } from './prefs.js';
 import { Torrent } from './torrent.js';
 import { Utils, createTextualTabsContainer, setTextContent } from './utils.js';
 
@@ -21,7 +22,7 @@ const peer_column_classes = [
 const webseed_column_classes = ['url', 'speed-down'];
 
 export class Inspector extends EventTarget {
-  constructor(controller) {
+  constructor(controller, prefs) {
     super();
 
     this.closed = false;
@@ -38,6 +39,11 @@ export class Inspector extends EventTarget {
     this.file_torrent_n = null;
     this.file_rows = null;
     this.elements.dismiss.addEventListener('click', () => this.close());
+
+    this.prefs_listener = this._onPrefsChange.bind(this);
+    this.prefs = prefs;
+    this.prefs.addEventListener('change', this.prefs_listener);
+
     Object.seal(this);
 
     controller.addEventListener(
@@ -58,6 +64,7 @@ export class Inspector extends EventTarget {
         'torrent-selection-changed',
         this.selection_listener,
       );
+      this.prefs.removeEventListener('change', this.prefs_listener);
       this.dispatchEvent(new Event('close'));
       for (const property of Object.keys(this)) {
         this[property] = null;
@@ -1036,8 +1043,16 @@ export class Inspector extends EventTarget {
       this.addNodeToView(tor, parent, sub);
     }
     if (sub.children) {
-      // sort entries - directories first
-      const sorted = Object.values(sub.children).toSorted((a, b) => {
+      for (const value of this._getSortedFiles(sub.children)) {
+        this.addSubtreeToView(tor, parent, value);
+      }
+    }
+  }
+
+  _getSortedFiles(children) {
+    // sort entries - directories first
+    if (this.prefs.file_sort_mode == Prefs.FileSortModeNatural) {
+      return Object.values(children).toSorted((a, b) => {
         if (a.children && !b.children) {
           return -1;
         }
@@ -1046,10 +1061,8 @@ export class Inspector extends EventTarget {
         }
         return a.name.localeCompare(b.name);
       });
-
-      for (const value of sorted) {
-        this.addSubtreeToView(tor, parent, value);
-      }
+    } else {
+      return Object.values(children);
     }
   }
 
@@ -1080,6 +1093,17 @@ export class Inspector extends EventTarget {
       for (const row of file_rows) {
         row.refresh();
       }
+    }
+  }
+
+  _onPrefsChange(event_) {
+    switch (event_.key) {
+      case Prefs.FileSortMode:
+        this._clearFileList();
+        this._updateFiles();
+        break;
+      default:
+        break;
     }
   }
 }
