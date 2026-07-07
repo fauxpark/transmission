@@ -1051,7 +1051,7 @@ export class Inspector extends EventTarget {
 
   _getSortedFiles(children) {
     // sort entries - directories first
-    if (this.prefs.file_sort_mode == Prefs.FileSortModeNatural) {
+    if (this.prefs.file_sort_mode === Prefs.FileSortModeNatural) {
       return Object.values(children).toSorted((a, b) => {
         if (a.children && !b.children) {
           return -1;
@@ -1097,13 +1097,9 @@ export class Inspector extends EventTarget {
   }
 
   _onPrefsChange(event_) {
-    switch (event_.key) {
-      case Prefs.FileSortMode:
-        this._clearFileList();
-        this._updateFiles();
-        break;
-      default:
-        break;
+    if (event_.key === Prefs.FileSortMode) {
+      this._clearFileList();
+      this._updateFiles();
     }
   }
 }
