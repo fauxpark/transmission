@@ -1061,9 +1061,8 @@ export class Inspector extends EventTarget {
         }
         return a.name.localeCompare(b.name);
       });
-    } else {
-      return Object.values(children);
     }
+    return Object.values(children);
   }
 
   _updateFiles() {
