@@ -1043,13 +1043,13 @@ export class Inspector extends EventTarget {
       this.addNodeToView(tor, parent, sub);
     }
     if (sub.children) {
-      for (const value of _getSortedFiles(sub.children)) {
+      for (const value of Inspector._getSortedFiles(sub.children)) {
         this.addSubtreeToView(tor, parent, value);
       }
     }
   }
 
-  static getSortedFiles(children) {
+  static _getSortedFiles(children) {
     // sort entries - directories first
     return Object.values(children).toSorted((a, b) => {
       if (a.children && !b.children) {
