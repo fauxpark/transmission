@@ -1051,18 +1051,15 @@ export class Inspector extends EventTarget {
 
   _getSortedFiles(children) {
     // sort entries - directories first
-    if (this.prefs.file_sort_mode === Prefs.FileSortModeNatural) {
-      return Object.values(children).toSorted((a, b) => {
-        if (a.children && !b.children) {
-          return -1;
-        }
-        if (!a.children && b.children) {
-          return 1;
-        }
-        return a.name.localeCompare(b.name);
-      });
-    }
-    return Object.values(children);
+    return Object.values(children).toSorted((a, b) => {
+      if (a.children && !b.children) {
+        return -1;
+      }
+      if (!a.children && b.children) {
+        return 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
   }
 
   _updateFiles() {
@@ -1085,7 +1082,22 @@ export class Inspector extends EventTarget {
       this.file_rows = [];
       const fragment = document.createDocumentFragment();
       const tree = Inspector.createFileTreeModel(tor);
-      this.addSubtreeToView(tor, fragment, tree);
+
+      if (this.prefs.file_sort_mode === Prefs.FileSortModeNatural) {
+        this.addSubtreeToView(tor, fragment, tree);
+      } else {
+        for (const [index, file] of tor.getFiles().entries()) {
+          const node = {
+            children: {},
+            depth: 0,
+            file_index: index,
+            file_indices: [index],
+            name: file.name,
+          };
+          this.addNodeToView(tor, fragment, node);
+        }
+      }
+
       list.append(fragment);
     } else {
       // ...refresh the already-existing file list
